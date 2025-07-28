@@ -1,13 +1,13 @@
 import { User, Order, MaterialItem, UserRole } from '@/types';
 
 export const mockUsers: User[] = [
-  { id: '1', name: 'John Smith', email: 'john@company.com', role: 'site_foreman', avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '2', name: 'Sarah Johnson', email: 'sarah@company.com', role: 'project_manager', avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '3', name: 'Mike Wilson', email: 'mike@company.com', role: 'shop_manager', avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '4', name: 'Lisa Chen', email: 'lisa@company.com', role: 'assistant_shop_manager', avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '5', name: 'David Brown', email: 'david@company.com', role: 'shop_employee', avatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '6', name: 'Tom Rodriguez', email: 'tom@company.com', role: 'truck_driver', avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '7', name: 'Jennifer Davis', email: 'jennifer@company.com', role: 'accountant_manager', avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
+  { id: '1', name: 'John Smith', email: 'john@company.com', role: 'site_foreman' },
+  { id: '2', name: 'Sarah Johnson', email: 'sarah@company.com', role: 'project_manager' },
+  { id: '3', name: 'Mike Wilson', email: 'mike@company.com', role: 'shop_manager' },
+  { id: '4', name: 'Lisa Chen', email: 'lisa@company.com', role: 'assistant_shop_manager' },
+  { id: '5', name: 'David Brown', email: 'david@company.com', role: 'shop_employee' },
+  { id: '6', name: 'Tom Rodriguez', email: 'tom@company.com', role: 'truck_driver' },
+  { id: '7', name: 'Jennifer Davis', email: 'jennifer@company.com', role: 'accountant_manager' },
 ];
 
 export const mockMaterials: MaterialItem[] = [

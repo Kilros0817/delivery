@@ -1,11 +1,11 @@
 import React from 'react';
 import { useState } from 'react';
-import { 
-  CheckCircle, 
-  XCircle, 
-  Package, 
-  Truck, 
-  AlertTriangle, 
+import {
+  CheckCircle,
+  XCircle,
+  Package,
+  Truck,
+  AlertTriangle,
   DollarSign,
   Edit3,
   Eye
@@ -54,7 +54,7 @@ export const RoleBasedOrderActions: React.FC<RoleBasedOrderActionsProps> = ({
             label: orderStatus === 'pending' ? 'Edit Order' : 'Update Order',
             icon: Edit3,
             color: 'bg-blue-600 hover:bg-blue-700',
-            description: orderStatus === 'pending' 
+            description: orderStatus === 'pending'
               ? 'Modify order details before processing'
               : 'Add materials or increase quantities'
           });
@@ -70,29 +70,17 @@ export const RoleBasedOrderActions: React.FC<RoleBasedOrderActionsProps> = ({
 
       case 'project_manager':
         if (orderStatus === 'pending') {
-          if (orderStatus !== 'delivered' && orderStatus !== 'cancelled') {
-            actions.push({
-              id: 'edit',
-              label: 'Modify Order',
-              icon: Edit3,
-              color: 'bg-blue-600 hover:bg-blue-700',
-              description: 'Change item style or manufacturer'
-            });
-          }
+          actions.push({
+            id: 'edit',
+            label: 'Modify Order',
+            icon: Edit3,
+            color: 'bg-blue-600 hover:bg-blue-700',
+            description: 'Change item style or manufacturer'
+          });
         }
         break;
 
       case 'shop_manager':
-        if (orderStatus === 'approved') {
-          actions.push({
-            id: 'in_shop',
-            label: 'Move to Shop',
-            icon: Package,
-            status: 'in_shop',
-            color: 'bg-purple-600 hover:bg-purple-700',
-            description: 'Materials received in shop'
-          });
-        }
         if (orderStatus === 'in_shop' || orderStatus === 'being_pulled') {
           actions.push({
             id: 'back_order',
@@ -238,12 +226,12 @@ export const RoleBasedOrderActions: React.FC<RoleBasedOrderActionsProps> = ({
 
   const handleAction = async (actionId: string, status?: OrderStatus) => {
     if (isUpdating) return;
-    
+
     setIsUpdating(true);
-    
+
     // Add a small delay to show the loading state
     await new Promise(resolve => setTimeout(resolve, 500));
-    
+
     if (status) {
       onStatusUpdate(order.id, status);
     } else if (actionId === 'edit' && onEditOrder) {
@@ -260,27 +248,27 @@ export const RoleBasedOrderActions: React.FC<RoleBasedOrderActionsProps> = ({
       // Handle other custom actions
       console.log(`Action ${actionId} triggered for order ${order.id}`);
     }
-    
+
     setIsUpdating(false);
   };
 
   const handleMaterialStatusUpdate = (materialId: string, status: 'available' | 'back_ordered') => {
     // In a real app, this would update the material status in the database
     console.log(`Material ${materialId} status updated to ${status}`);
-    
+
     // Update order status based on material availability
     const hasBackOrderedItems = status === 'back_ordered';
     if (hasBackOrderedItems && order.status !== 'back_ordered') {
       onStatusUpdate(order.id, 'back_ordered', `Material marked as back ordered`);
     }
-    
+
     setShowMaterialManager(false);
   };
 
   const handleDeliveryStatusUpdate = (status: 'delivered_full' | 'delivered_partial' | 'not_delivered', notes?: string) => {
     let orderStatus: OrderStatus;
     let statusNotes = notes || '';
-    
+
     switch (status) {
       case 'delivered_full':
         orderStatus = currentUser.role === 'truck_driver' ? 'delivered' : 'foreman_confirmed';
@@ -295,7 +283,7 @@ export const RoleBasedOrderActions: React.FC<RoleBasedOrderActionsProps> = ({
         statusNotes = `Delivery not completed. ${statusNotes}`.trim();
         break;
     }
-    
+
     onStatusUpdate(order.id, orderStatus, statusNotes);
     setShowDeliveryModal(false);
   };
