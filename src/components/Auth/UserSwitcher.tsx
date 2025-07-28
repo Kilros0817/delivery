@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { ChevronDown, User, LogOut, Users } from 'lucide-react';
-import { User as UserType } from '../../types';
-import { mockUsers } from '../../data/mockData';
+import { User as UserType } from '@/types';
+import { mockUsers } from '@/data/mockData';
 
 interface UserSwitcherProps {
   currentUser: UserType;

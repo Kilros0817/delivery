@@ -9,7 +9,7 @@ import {
   Truck,
   Package
 } from 'lucide-react';
-import { Order } from '../../types';
+import { Order } from '@/types';
 
 interface OrderCardProps {
   order: Order;

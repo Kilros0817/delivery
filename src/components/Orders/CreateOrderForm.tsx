@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { X, Plus, Trash2, Calendar, MapPin, AlertTriangle } from 'lucide-react';
-import { MaterialItem, User } from '../../types';
-import { mockMaterials } from '../../data/mockData';
+import { MaterialItem, User, Order } from '@/types';
+import { mockMaterials } from '@/data/mockData';
 
 interface CreateOrderFormProps {
   currentUser: User;

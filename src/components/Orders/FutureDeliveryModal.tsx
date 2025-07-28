@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Calendar, Clock, MapPin, Package, AlertTriangle } from 'lucide-react';
-import { Order } from '../../types';
+import { Order } from '@/types';
 
 interface FutureDeliveryModalProps {
   order: Order;

@@ -10,11 +10,11 @@ import {
   Edit3,
   Eye
 } from 'lucide-react';
-import { Order, OrderStatus, User, UserRole } from '../../types';
-import { MaterialStatusManager } from './MaterialStatusManager';
-import { DeliveryStatusModal } from './DeliveryStatusModal';
-import { BillToJobModal } from './BillToJobModal';
-import { FutureDeliveryModal } from './FutureDeliveryModal';
+import { Order, OrderStatus, User, UserRole } from '@/types';
+import { MaterialStatusManager } from '@/components/Orders/MaterialStatusManager';
+import { DeliveryStatusModal } from '@/components/Orders/DeliveryStatusModal';
+import { BillToJobModal } from '@/components/Orders/BillToJobModal';
+import { FutureDeliveryModal } from '@/components/Orders/FutureDeliveryModal';
 
 interface RoleBasedOrderActionsProps {
   order: Order;

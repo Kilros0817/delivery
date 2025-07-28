@@ -1,4 +1,4 @@
-import { User, Order, MaterialItem, UserRole } from '../types';
+import { User, Order, MaterialItem, UserRole } from '@/types';
 
 export const mockUsers: User[] = [
   { id: '1', name: 'John Smith', email: 'john@company.com', role: 'site_foreman', avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },

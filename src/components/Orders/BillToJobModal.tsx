@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { DollarSign, FileText, Calendar, User } from 'lucide-react';
-import { Order } from '../../types';
+import { Order } from '@/types';
 
 interface BillToJobModalProps {
   order: Order;

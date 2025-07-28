@@ -10,7 +10,7 @@ import {
   AlertTriangle,
   User
 } from 'lucide-react';
-import { UserRole } from '../../types';
+import { UserRole } from '@/types';
 
 interface SidebarProps {
   currentUserRole: UserRole;
@@ -80,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const menuItems = getMenuItems(currentUserRole);
 
   return (
-    <div className="w-64 bg-gray-900 text-white h-full">
+    <div className="w-64 bg-gray-900 text-white min-h-screen">
       <nav className="mt-8">
         <div className="px-4 space-y-2">
           {menuItems.map((item) => {

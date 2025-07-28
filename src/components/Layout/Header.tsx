@@ -1,7 +1,7 @@
 import React from 'react';
 import { Bell, Package } from 'lucide-react';
-import { User as UserType } from '../../types';
-import { UserSwitcher } from '../Auth/UserSwitcher';
+import { User as UserType } from '@/types';
+import { UserSwitcher } from '@/components/Auth/UserSwitcher';
 
 interface HeaderProps {
   currentUser: UserType;

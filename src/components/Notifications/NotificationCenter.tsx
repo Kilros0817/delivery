@@ -1,6 +1,6 @@
 import React from 'react';
 import { X, Package, Clock, CheckCircle, AlertTriangle, Truck } from 'lucide-react';
-import { Order, User } from '../../types';
+import { Order, User } from '@/types';
 
 interface NotificationItem {
   id: string;

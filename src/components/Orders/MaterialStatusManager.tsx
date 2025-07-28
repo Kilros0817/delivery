@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Package, AlertTriangle, CheckCircle } from 'lucide-react';
-import { MaterialItem } from '../../types';
+import { MaterialItem } from '@/types';
 
 interface MaterialStatusManagerProps {
   materials: MaterialItem[];

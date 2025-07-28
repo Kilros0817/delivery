@@ -9,7 +9,7 @@ import {
   Users,
   DollarSign
 } from 'lucide-react';
-import { Order, User } from '../../types';
+import { Order, User } from '@/types';
 
 interface DashboardProps {
   orders: Order[];

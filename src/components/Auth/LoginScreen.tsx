@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Package, User, Lock, Eye, EyeOff } from 'lucide-react';
-import { User as UserType } from '../../types';
-import { mockUsers } from '../../data/mockData';
+import { User as UserType } from '@/types';
+import { mockUsers } from '@/data/mockData';
 
 interface LoginScreenProps {
   onLogin: (user: UserType) => void;

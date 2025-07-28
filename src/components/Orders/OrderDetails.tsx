@@ -11,8 +11,8 @@ import {
   Save,
   AlertTriangle
 } from 'lucide-react';
-import { Order, OrderStatus, User as UserType } from '../../types';
-import { RoleBasedOrderActions } from './RoleBasedOrderActions';
+import { Order, OrderStatus, User as UserType } from '@/types';
+import { RoleBasedOrderActions } from '@/components/Orders/RoleBasedOrderActions';
 
 interface OrderDetailsProps {
   order: Order;
