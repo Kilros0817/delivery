@@ -8,13 +8,8 @@ export interface User {
 
 export type UserRole = 
   | 'site_foreman' 
-  | 'job_lead' 
-  | 'project_manager' 
   | 'shop_manager' 
-  | 'assistant_shop_manager' 
-  | 'shop_employee' 
-  | 'truck_driver' 
-  | 'accountant_manager';
+  | 'truck_driver';
 
 export type OrderStatus = 
   | 'pending' 

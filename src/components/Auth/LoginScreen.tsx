@@ -124,7 +124,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600 mb-3">Demo Credentials (Password: password123):</p>
             <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-              {mockUsers.map((user) => (
+              {mockUsers.filter(user => ['site_foreman', 'shop_manager', 'truck_driver'].includes(user.role)).map((user) => (
                 <button
                   key={user.id}
                   onClick={() => handleQuickLogin(user)}

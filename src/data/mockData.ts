@@ -1,13 +1,67 @@
 import { User, Order, MaterialItem, UserRole } from '@/types';
 
 export const mockUsers: User[] = [
-  { id: '1', name: 'John Smith', email: 'john@company.com', role: 'site_foreman', avatar: 'https://images.pexels.com/photos/2379004/pexels-photo-2379004.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '2', name: 'Sarah Johnson', email: 'sarah@company.com', role: 'project_manager', avatar: 'https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '3', name: 'Mike Wilson', email: 'mike@company.com', role: 'shop_manager', avatar: 'https://images.pexels.com/photos/1222271/pexels-photo-1222271.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '4', name: 'Lisa Chen', email: 'lisa@company.com', role: 'assistant_shop_manager', avatar: 'https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '5', name: 'David Brown', email: 'david@company.com', role: 'shop_employee', avatar: 'https://images.pexels.com/photos/1681010/pexels-photo-1681010.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '6', name: 'Tom Rodriguez', email: 'tom@company.com', role: 'truck_driver', avatar: 'https://images.pexels.com/photos/1043471/pexels-photo-1043471.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
-  { id: '7', name: 'Jennifer Davis', email: 'jennifer@company.com', role: 'accountant_manager', avatar: 'https://images.pexels.com/photos/1181686/pexels-photo-1181686.jpeg?auto=compress&cs=tinysrgb&w=150&h=150&fit=crop' },
+  { id: '1', name: 'John Smith', email: 'john@company.com', role: 'site_foreman' },
+  { id: '3', name: 'Mike Wilson', email: 'mike@company.com', role: 'shop_manager' },
+  { id: '6', name: 'Tom Rodriguez', email: 'tom@company.com', role: 'truck_driver' },
+  { id: '7', name: 'Carlos Martinez', email: 'carlos@company.com', role: 'truck_driver' },
+  { id: '8', name: 'David Johnson', email: 'david@company.com', role: 'truck_driver' },
+  { id: '9', name: 'Robert Chen', email: 'robert@company.com', role: 'truck_driver' },
+];
+
+export const mockTruckDrivers = [
+  {
+    id: '6',
+    name: 'Tom Rodriguez',
+    email: 'tom@company.com',
+    phone: '(555) 123-4567',
+    truckNumber: 'TRUCK-001',
+    licenseNumber: 'CDL-NY-123456',
+    status: 'out_for_delivery',
+    currentLocation: 'En route to Wall Street',
+    estimatedReturn: '2024-01-15T16:00:00Z',
+    ordersAssigned: 1,
+    completedToday: 2
+  },
+  {
+    id: '7',
+    name: 'Carlos Martinez',
+    email: 'carlos@company.com',
+    phone: '(555) 234-5678',
+    truckNumber: 'TRUCK-002',
+    licenseNumber: 'CDL-NY-234567',
+    status: 'loading',
+    currentLocation: 'Shop - Loading Bay 2',
+    estimatedReturn: '2024-01-15T18:00:00Z',
+    ordersAssigned: 2,
+    completedToday: 1
+  },
+  {
+    id: '8',
+    name: 'David Johnson',
+    email: 'david@company.com',
+    phone: '(555) 345-6789',
+    truckNumber: 'TRUCK-003',
+    licenseNumber: 'CDL-NY-345678',
+    status: 'available',
+    currentLocation: 'Shop - Parking Area',
+    estimatedReturn: null,
+    ordersAssigned: 0,
+    completedToday: 3
+  },
+  {
+    id: '9',
+    name: 'Robert Chen',
+    email: 'robert@company.com',
+    phone: '(555) 456-7890',
+    truckNumber: 'TRUCK-004',
+    licenseNumber: 'CDL-NY-456789',
+    status: 'maintenance',
+    currentLocation: 'Shop - Maintenance Bay',
+    estimatedReturn: '2024-01-16T08:00:00Z',
+    ordersAssigned: 0,
+    completedToday: 0
+  }
 ];
 
 export const mockMaterials: MaterialItem[] = [
@@ -99,7 +153,7 @@ export const mockOrders: Order[] = [
     projectName: 'Manhattan Financial District Tower',
     jobSite: '125 Wall Street, New York, NY 10005',
     requestedBy: mockUsers[0],
-    assignedTo: mockUsers[5],
+    assignedTo: mockUsers[2],
     status: 'ready_to_load',
     priority: 'high',
     materials: [
@@ -114,9 +168,9 @@ export const mockOrders: Order[] = [
     updatedAt: '2024-01-12T14:30:00Z',
     statusHistory: [
       { id: '1', status: 'pending', updatedBy: mockUsers[0], timestamp: '2024-01-10T08:00:00Z' },
-      { id: '2', status: 'in_shop', updatedBy: mockUsers[2], timestamp: '2024-01-10T10:15:00Z', notes: 'Materials received in shop' },
-      { id: '3', status: 'being_pulled', updatedBy: mockUsers[3], timestamp: '2024-01-12T14:30:00Z', notes: 'Started pulling materials' },
-      { id: '4', status: 'ready_to_load', updatedBy: mockUsers[4], timestamp: '2024-01-13T09:00:00Z', notes: 'Materials ready for truck loading' },
+      { id: '2', status: 'in_shop', updatedBy: mockUsers[1], timestamp: '2024-01-10T10:15:00Z', notes: 'Materials received in shop' },
+      { id: '3', status: 'being_pulled', updatedBy: mockUsers[1], timestamp: '2024-01-12T14:30:00Z', notes: 'Started pulling materials' },
+      { id: '4', status: 'ready_to_load', updatedBy: mockUsers[1], timestamp: '2024-01-13T09:00:00Z', notes: 'Materials ready for truck loading' },
     ]
   },
   {
@@ -139,8 +193,8 @@ export const mockOrders: Order[] = [
     updatedAt: '2024-01-13T11:45:00Z',
     statusHistory: [
       { id: '4', status: 'pending', updatedBy: mockUsers[0], timestamp: '2024-01-11T09:30:00Z' },
-      { id: '5', status: 'in_shop', updatedBy: mockUsers[2], timestamp: '2024-01-11T11:00:00Z', notes: 'Materials received in shop' },
-      { id: '6', status: 'back_ordered', updatedBy: mockUsers[2], timestamp: '2024-01-13T11:45:00Z', notes: 'Victaulic Coupling 4" temporarily out of stock, expected restock Jan 20' },
+      { id: '5', status: 'in_shop', updatedBy: mockUsers[1], timestamp: '2024-01-11T11:00:00Z', notes: 'Materials received in shop' },
+      { id: '6', status: 'back_ordered', updatedBy: mockUsers[1], timestamp: '2024-01-13T11:45:00Z', notes: 'Victaulic Coupling 4" temporarily out of stock, expected restock Jan 20' },
     ],
     backOrderedItems: ['Victaulic Coupling 4"']
   },
@@ -150,7 +204,7 @@ export const mockOrders: Order[] = [
     projectName: 'Brooklyn Bridge Maintenance',
     jobSite: 'Brooklyn Bridge Approach, New York, NY 10038',
     requestedBy: mockUsers[0],
-    assignedTo: mockUsers[5],
+    assignedTo: mockUsers[2],
     status: 'delivered',
     priority: 'urgent',
     materials: [
@@ -163,23 +217,101 @@ export const mockOrders: Order[] = [
     updatedAt: '2024-01-12T05:45:00Z',
     statusHistory: [
       { id: '7', status: 'pending', updatedBy: mockUsers[0], timestamp: '2024-01-09T16:00:00Z' },
-      { id: '8', status: 'in_shop', updatedBy: mockUsers[2], timestamp: '2024-01-09T17:30:00Z', notes: 'Materials received in shop' },
-      { id: '9', status: 'being_pulled', updatedBy: mockUsers[3], timestamp: '2024-01-10T07:00:00Z' },
-      { id: '10', status: 'being_pulled', updatedBy: mockUsers[4], timestamp: '2024-01-11T15:00:00Z' },
-      { id: '11', status: 'loaded', updatedBy: mockUsers[4], timestamp: '2024-01-11T16:30:00Z' },
-      { id: '12', status: 'out_for_delivery', updatedBy: mockUsers[5], timestamp: '2024-01-12T04:00:00Z' },
-      { id: '13', status: 'delivered', updatedBy: mockUsers[5], timestamp: '2024-01-12T05:45:00Z', notes: 'Delivered successfully, signed by site supervisor' },
+      { id: '8', status: 'in_shop', updatedBy: mockUsers[1], timestamp: '2024-01-09T17:30:00Z', notes: 'Materials received in shop' },
+      { id: '9', status: 'being_pulled', updatedBy: mockUsers[1], timestamp: '2024-01-10T07:00:00Z' },
+      { id: '10', status: 'ready_to_load', updatedBy: mockUsers[1], timestamp: '2024-01-11T15:00:00Z' },
+      { id: '11', status: 'loaded', updatedBy: mockUsers[1], timestamp: '2024-01-11T16:30:00Z' },
+      { id: '12', status: 'out_for_delivery', updatedBy: mockUsers[2], timestamp: '2024-01-12T04:00:00Z' },
+      { id: '13', status: 'delivered', updatedBy: mockUsers[2], timestamp: '2024-01-12T05:45:00Z', notes: 'Delivered successfully, signed by site supervisor' },
+    ]
+  },
+  {
+    id: '4',
+    orderNumber: 'ORD-2024-004',
+    projectName: 'Times Square Office Building',
+    jobSite: '1500 Broadway, New York, NY 10036',
+    requestedBy: mockUsers[0],
+    assignedTo: mockUsers[2], // Tom Rodriguez
+    status: 'loaded',
+    priority: 'high',
+    materials: [
+      mockMaterials[3], // Black Steel Pipe 2"
+      mockMaterials[19], // Victaulic Coupling 2"
+      mockMaterials[27], // Victaulic Tee 2"
+      mockMaterials[55] // Pipe Hanger 2"
+    ],
+    deliveryDate: '2024-01-16',
+    specialNotes: 'Delivery to 42nd Street entrance. Contact building security first.',
+    createdAt: '2024-01-12T10:00:00Z',
+    updatedAt: '2024-01-15T14:00:00Z',
+    statusHistory: [
+      { id: '14', status: 'pending', updatedBy: mockUsers[0], timestamp: '2024-01-12T10:00:00Z' },
+      { id: '15', status: 'in_shop', updatedBy: mockUsers[1], timestamp: '2024-01-12T11:30:00Z', notes: 'Materials received in shop' },
+      { id: '16', status: 'being_pulled', updatedBy: mockUsers[1], timestamp: '2024-01-14T08:00:00Z' },
+      { id: '17', status: 'ready_to_load', updatedBy: mockUsers[1], timestamp: '2024-01-15T13:00:00Z' },
+      { id: '18', status: 'loaded', updatedBy: mockUsers[1], timestamp: '2024-01-15T14:00:00Z', notes: 'Assigned to driver: Tom Rodriguez' },
+    ]
+  },
+  {
+    id: '5',
+    orderNumber: 'ORD-2024-005',
+    projectName: 'Central Park West Residential',
+    jobSite: '200 Central Park West, New York, NY 10024',
+    requestedBy: mockUsers[0],
+    assignedTo: mockUsers[2], // Tom Rodriguez
+    status: 'out_for_delivery',
+    priority: 'medium',
+    materials: [
+      mockMaterials[8], // Galvanized Steel Pipe 1"
+      mockMaterials[17], // Victaulic Coupling 1"
+      mockMaterials[49], // Hilti Drop-in Shield 3/8"
+      mockMaterials[53] // Pipe Hanger 1"
+    ],
+    deliveryDate: '2024-01-15',
+    specialNotes: 'Residential building - use service entrance on 69th Street.',
+    createdAt: '2024-01-11T14:00:00Z',
+    updatedAt: '2024-01-15T07:30:00Z',
+    statusHistory: [
+      { id: '19', status: 'pending', updatedBy: mockUsers[0], timestamp: '2024-01-11T14:00:00Z' },
+      { id: '20', status: 'in_shop', updatedBy: mockUsers[1], timestamp: '2024-01-11T15:30:00Z', notes: 'Materials received in shop' },
+      { id: '21', status: 'being_pulled', updatedBy: mockUsers[1], timestamp: '2024-01-13T09:00:00Z' },
+      { id: '22', status: 'ready_to_load', updatedBy: mockUsers[1], timestamp: '2024-01-14T16:00:00Z' },
+      { id: '23', status: 'loaded', updatedBy: mockUsers[1], timestamp: '2024-01-14T17:00:00Z', notes: 'Assigned to driver: Tom Rodriguez' },
+      { id: '24', status: 'out_for_delivery', updatedBy: mockUsers[2], timestamp: '2024-01-15T07:30:00Z' },
+    ]
+  },
+  {
+    id: '6',
+    orderNumber: 'ORD-2024-006',
+    projectName: 'Lower East Side Renovation',
+    jobSite: '150 Rivington Street, New York, NY 10002',
+    requestedBy: mockUsers[0],
+    assignedTo: mockUsers[2], // Tom Rodriguez
+    status: 'delivered',
+    priority: 'low',
+    materials: [
+      mockMaterials[1], // Black Steel Pipe 1.25"
+      mockMaterials[18], // Victaulic Coupling 1.25"
+      mockMaterials[54] // Pipe Hanger 1.25"
+    ],
+    deliveryDate: '2024-01-13',
+    specialNotes: 'Small street - truck parking may be limited. Call ahead.',
+    createdAt: '2024-01-10T11:00:00Z',
+    updatedAt: '2024-01-13T15:45:00Z',
+    statusHistory: [
+      { id: '25', status: 'pending', updatedBy: mockUsers[0], timestamp: '2024-01-10T11:00:00Z' },
+      { id: '26', status: 'in_shop', updatedBy: mockUsers[1], timestamp: '2024-01-10T12:30:00Z', notes: 'Materials received in shop' },
+      { id: '27', status: 'being_pulled', updatedBy: mockUsers[1], timestamp: '2024-01-11T10:00:00Z' },
+      { id: '28', status: 'ready_to_load', updatedBy: mockUsers[1], timestamp: '2024-01-12T14:00:00Z' },
+      { id: '29', status: 'loaded', updatedBy: mockUsers[1], timestamp: '2024-01-12T15:00:00Z', notes: 'Assigned to driver: Tom Rodriguez' },
+      { id: '30', status: 'out_for_delivery', updatedBy: mockUsers[2], timestamp: '2024-01-13T08:00:00Z' },
+      { id: '31', status: 'delivered', updatedBy: mockUsers[2], timestamp: '2024-01-13T15:45:00Z', notes: 'Delivered successfully, received by site foreman' },
     ]
   }
 ];
 
 export const rolePermissions: Record<UserRole, string[]> = {
   site_foreman: ['create_order', 'view_orders', 'add_notes'],
-  job_lead: ['create_order', 'view_orders', 'add_notes'],
-  project_manager: ['view_all_orders', 'modify_order', 'add_notes', 'approve_future_delivery'],
   shop_manager: ['view_all_orders', 'update_status', 'assign_driver', 'add_notes'],
-  assistant_shop_manager: ['view_orders', 'update_status', 'add_notes', 'handle_backorders', 'schedule_future_delivery'],
-  shop_employee: ['view_assigned_orders', 'update_pull_status', 'add_notes'],
   truck_driver: ['view_assigned_deliveries', 'update_delivery_status', 'add_notes'],
-  accountant_manager: ['view_all_orders', 'view_costs', 'add_notes']
 };

@@ -10,7 +10,7 @@ import { OrderDetails } from '@/components/Orders/OrderDetails';
 import { CreateOrderForm } from '@/components/Orders/CreateOrderForm';
 import { NotificationCenter } from '@/components/Notifications/NotificationCenter';
 import { SuccessNotification } from '@/components/Notifications/SuccessNotification';
-import { mockUsers, mockOrders } from '@/data/mockData';
+import { mockUsers, mockOrders, mockTruckDrivers } from '@/data/mockData';
 import { Order, OrderStatus, User } from '@/types';
 
 interface NotificationItem {
@@ -146,6 +146,60 @@ export default function Home() {
     console.log(`Note added to order ${orderId}: ${note}`);
   };
 
+  const handleAssignDriver = (orderId: string, driverId: string, driverName: string) => {
+    if (!currentUser) return;
+
+    const driverUser = mockUsers.find(u => u.id === driverId);
+    if (!driverUser) return;
+
+    setOrders(prevOrders => 
+      prevOrders.map(order => {
+        if (order.id === orderId) {
+          const newStatusUpdate = {
+            id: Date.now().toString(),
+            status: 'loaded' as OrderStatus,
+            updatedBy: currentUser,
+            timestamp: new Date().toISOString(),
+            notes: `Assigned to driver: ${driverName}`
+          };
+          
+          return {
+            ...order,
+            assignedTo: driverUser,
+            status: 'loaded' as OrderStatus,
+            updatedAt: new Date().toISOString(),
+            statusHistory: [...order.statusHistory, newStatusUpdate]
+          };
+        }
+        return order;
+      })
+    );
+    
+    // Add notification for driver assignment
+    const order = orders.find(o => o.id === orderId);
+    if (order) {
+      const newNotification: NotificationItem = {
+        id: Date.now().toString(),
+        type: 'status_update',
+        orderId,
+        orderNumber: order.orderNumber,
+        message: `Driver ${driverName} assigned to order - Status updated to "LOADED"`,
+        timestamp: new Date().toISOString(),
+        read: false,
+        updatedBy: currentUser
+      };
+      
+      setNotifications(prev => [newNotification, ...prev]);
+      
+      // Show success notification
+      setSuccessNotification({
+        isVisible: true,
+        message: `Driver ${driverName} assigned to order ${order.orderNumber}`
+      });
+    }
+    
+    console.log(`Driver ${driverName} assigned to order ${orderId} by ${currentUser.name}`);
+  };
   const handleCreateOrder = (orderData: any) => {
     if (!currentUser) return;
 
@@ -261,15 +315,20 @@ export default function Home() {
     if (!currentUser) return [];
 
     switch (activeTab) {
+      case 'active-orders':
+        if (currentUser.role === 'site_foreman') {
+          return orders.filter(order => 
+            order.requestedBy.id === currentUser.id && 
+            !['delivered', 'foreman_confirmed'].includes(order.status)
+          );
+        }
+        return orders.filter(order => !['delivered', 'foreman_confirmed'].includes(order.status));
+      case 'completed-orders':
+        return orders.filter(order => ['delivered', 'foreman_confirmed'].includes(order.status));
       case 'shop-queue':
         return orders.filter(order => ['pending', 'in_shop', 'being_pulled', 'ready_to_load'].includes(order.status));
-      case 'deliveries':
+      case 'truck-drivers':
         return orders.filter(order => ['loaded', 'out_for_delivery'].includes(order.status));
-      case 'my-deliveries':
-        return orders.filter(order => 
-          order.assignedTo?.id === currentUser.id && 
-          ['loaded', 'out_for_delivery', 'delivered'].includes(order.status)
-        );
       case 'my-tasks':
         return orders.filter(order => ['in_shop', 'being_pulled'].includes(order.status));
       default:
@@ -478,6 +537,149 @@ export default function Home() {
     );
   };
 
+  const renderTruckDriversContent = () => {
+    const getStatusColor = (status: string) => {
+      const colors = {
+        available: 'bg-green-100 text-green-800 border-green-200',
+        loading: 'bg-blue-100 text-blue-800 border-blue-200',
+        out_for_delivery: 'bg-orange-100 text-orange-800 border-orange-200',
+        maintenance: 'bg-red-100 text-red-800 border-red-200',
+        off_duty: 'bg-gray-100 text-gray-800 border-gray-200',
+      };
+      return colors[status as keyof typeof colors] || colors.available;
+    };
+
+    const getStatusIcon = (status: string) => {
+      switch (status) {
+        case 'available':
+          return '✅';
+        case 'loading':
+          return '📦';
+        case 'out_for_delivery':
+          return '🚛';
+        case 'maintenance':
+          return '🔧';
+        case 'off_duty':
+          return '🏠';
+        default:
+          return '❓';
+      }
+    };
+
+    return (
+      <div className="space-y-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-2xl font-bold text-gray-900">Truck Drivers</h1>
+          <div className="text-sm text-gray-600">
+            {mockTruckDrivers.filter(d => d.status === 'available').length} Available • 
+            {mockTruckDrivers.filter(d => d.status === 'out_for_delivery').length} On Delivery • 
+            {mockTruckDrivers.filter(d => d.status === 'loading').length} Loading
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {mockTruckDrivers.map((driver) => (
+            <div key={driver.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 font-semibold text-lg">
+                      {driver.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold text-gray-900">{driver.name}</h3>
+                    <p className="text-sm text-gray-600">{driver.truckNumber}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(driver.status)}`}>
+                    <span className="mr-1">{getStatusIcon(driver.status)}</span>
+                    {driver.status.replace('_', ' ').toUpperCase()}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Contact:</span>
+                  <span className="font-medium">{driver.phone}</span>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">License:</span>
+                  <span className="font-medium">{driver.licenseNumber}</span>
+                </div>
+                
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-gray-600">Current Location:</span>
+                  <span className="font-medium text-right">{driver.currentLocation}</span>
+                </div>
+                
+                {driver.estimatedReturn && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-gray-600">Est. Return:</span>
+                    <span className="font-medium">
+                      {new Date(driver.estimatedReturn).toLocaleTimeString([], { 
+                        hour: '2-digit', 
+                        minute: '2-digit' 
+                      })}
+                    </span>
+                  </div>
+                )}
+                
+                <div className="border-t pt-3 mt-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-600">{driver.ordersAssigned}</div>
+                      <div className="text-gray-600">Assigned</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-600">{driver.completedToday}</div>
+                      <div className="text-gray-600">Completed Today</div>
+                    </div>
+                  </div>
+                </div>
+                
+                {driver.status === 'maintenance' && (
+                  <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-sm text-red-800">🔧 Truck in maintenance - Not available for assignments</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+        
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 className="text-lg font-semibold text-blue-900 mb-2">Driver Status Legend</h3>
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
+            <div className="flex items-center space-x-2">
+              <span>✅</span>
+              <span className="text-blue-800">Available</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>📦</span>
+              <span className="text-blue-800">Loading</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>🚛</span>
+              <span className="text-blue-800">On Delivery</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>🔧</span>
+              <span className="text-blue-800">Maintenance</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span>🏠</span>
+              <span className="text-blue-800">Off Duty</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderContent = () => {
     if (!currentUser) return null;
 
@@ -489,29 +691,28 @@ export default function Home() {
           onCreateOrder={() => setShowCreateOrder(true)}
           onViewPendingOrders={() => {
             // Navigate to appropriate tab based on user role
-            if (currentUser.role === 'site_foreman' || currentUser.role === 'job_lead') {
-              setActiveTab('orders');
-            } else if (currentUser.role === 'project_manager') {
-              setActiveTab('analytics');
-            } else if (currentUser.role === 'shop_manager' || currentUser.role === 'assistant_shop_manager') {
+            if (currentUser.role === 'site_foreman') {
+              setActiveTab('active-orders');
+            } else if (currentUser.role === 'shop_manager') {
               setActiveTab('shop-queue');
             } else if (currentUser.role === 'truck_driver') {
               setActiveTab('my-deliveries');
-            } else if (currentUser.role === 'accountant_manager') {
-              setActiveTab('analytics');
             }
           }}
+          onStatusUpdate={handleStatusUpdate}
+          onAddNote={handleAddNote}
+          onAssignDriver={handleAssignDriver}
         />
       );
     }
 
-    if (activeTab === 'stakeholders') {
-      return renderStakeholdersContent();
+    if (activeTab === 'truck-drivers') {
+      return renderTruckDriversContent();
     }
 
     if (activeTab === 'create-order') {
       setShowCreateOrder(true);
-      setActiveTab('orders');
+      setActiveTab('active-orders');
     }
 
     const filteredOrders = getFilteredOrders();
@@ -520,8 +721,10 @@ export default function Home() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">
-            {activeTab === 'shop-queue' ? 'Shop Queue' :
-             activeTab === 'deliveries' ? 'Deliveries' :
+            {activeTab === 'active-orders' ? 'Active Orders' :
+             activeTab === 'completed-orders' ? 'Completed Orders' :
+             activeTab === 'shop-queue' ? 'Shop Queue' :
+             activeTab === 'truck-drivers' ? 'Truck Drivers' :
              activeTab === 'my-deliveries' ? 'My Deliveries' :
              activeTab === 'my-tasks' ? 'My Tasks' :
              'All Orders'}
@@ -598,6 +801,7 @@ export default function Home() {
           onClose={() => setSelectedOrder(null)}
           onStatusUpdate={handleStatusUpdate}
           onAddNote={handleAddNote}
+          onAssignDriver={handleAssignDriver}
           onEditOrder={setEditingOrder}
         />
       )}

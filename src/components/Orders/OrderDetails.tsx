@@ -6,13 +6,10 @@ import {
   MapPin, 
   Package, 
   Truck, 
-  MessageSquare,
-  Edit3,
-  Save,
   AlertTriangle
 } from 'lucide-react';
 import { Order, OrderStatus, User as UserType } from '@/types';
-import { RoleBasedOrderActions } from '@/components/Orders/RoleBasedOrderActions';
+import { TruckDriverAssignment } from './TruckDriverAssignment';
 
 interface OrderDetailsProps {
   order: Order;
@@ -21,6 +18,7 @@ interface OrderDetailsProps {
   onStatusUpdate: (orderId: string, status: OrderStatus, notes?: string) => void;
   onAddNote: (orderId: string, note: string) => void;
   onEditOrder?: (order: Order) => void;
+  onAssignDriver?: (orderId: string, driverId: string, driverName: string) => void;
 }
 
 export const OrderDetails: React.FC<OrderDetailsProps> = ({ 
@@ -29,11 +27,11 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   onClose, 
   onStatusUpdate,
   onAddNote,
-  onEditOrder
+  onEditOrder,
+  onAssignDriver
 }) => {
-  const [newNote, setNewNote] = useState('');
   const [statusNotes, setStatusNotes] = useState('');
-  const [isAddingNote, setIsAddingNote] = useState(false);
+  const [showDriverAssignment, setShowDriverAssignment] = useState(false);
 
   const getStatusColor = (status: string) => {
     const colors = {
@@ -72,11 +70,8 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
   const canUpdateStatus = () => {
     const rolePermissions = {
       shop_manager: ['pending', 'in_shop', 'being_pulled', 'ready_to_load', 'loaded', 'back_ordered'],
-      assistant_shop_manager: ['in_shop', 'being_pulled', 'ready_to_load'],
-      shop_employee: ['being_pulled', 'ready_to_load'],
       truck_driver: ['ready_to_load', 'loaded', 'out_for_delivery'],
       site_foreman: ['delivered'],
-      job_lead: ['delivered'],
     };
 
     const allowedStatuses = rolePermissions[currentUser.role as keyof typeof rolePermissions] || [];
@@ -94,6 +89,13 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
       setNewNote('');
       setIsAddingNote(false);
     }
+  };
+
+  const handleAssignDriver = (driverId: string, driverName: string) => {
+    if (onAssignDriver) {
+      onAssignDriver(order.id, driverId, driverName);
+    }
+    setShowDriverAssignment(false);
   };
 
   const totalValue = order.materials.reduce((sum, material) => 
@@ -164,6 +166,19 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                     {order.priority.toUpperCase()} PRIORITY
                   </span>
                 </div>
+
+                {/* Assign Driver Button for Shop Manager */}
+                {currentUser.role === 'shop_manager' && order.status === 'ready_to_load' && (
+                  <div className="mt-4">
+                    <button
+                      onClick={() => setShowDriverAssignment(true)}
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    >
+                      <Truck className="h-4 w-4 mr-2" />
+                      Assign Truck Driver
+                    </button>
+                  </div>
+                )}
 
                 {canUpdateStatus() && getAvailableStatusUpdates().length > 0 && (
                   <div className="space-y-2">
@@ -275,7 +290,7 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
                       <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getStatusColor(update.status)}`}>
                         {update.status.replace('_', ' ').toUpperCase()}
                       </span>
-                      <span className="text-sm text-gray-600">by {update.updatedBy.name}</span>
+                      <span className="text-sm text-gray-600">by {update.updatedBy?.name ?? 'Unknown User'}</span>
                       <span className="text-sm text-gray-500">
                         {new Date(update.timestamp).toLocaleString()}
                       </span>
@@ -289,60 +304,16 @@ export const OrderDetails: React.FC<OrderDetailsProps> = ({
             </div>
           </div>
 
-          {/* Role-based Actions */}
-          <RoleBasedOrderActions
-            order={order}
-            currentUser={currentUser}
-            onStatusUpdate={onStatusUpdate}
-            onEditOrder={onEditOrder}
-          />
-
-          {/* Add Note Section */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-lg font-medium text-gray-900">Notes</h3>
-              {!isAddingNote && (
-                <button
-                  onClick={() => setIsAddingNote(true)}
-                  className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                >
-                  <MessageSquare className="h-4 w-4 mr-1" />
-                  Add Note
-                </button>
-              )}
-            </div>
-
-            {isAddingNote && (
-              <div className="space-y-3">
-                <textarea
-                  value={newNote}
-                  onChange={(e) => setNewNote(e.target.value)}
-                  placeholder="Add a note..."
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
-                  rows={3}
-                />
-                <div className="flex space-x-2">
-                  <button
-                    onClick={handleAddNote}
-                    className="inline-flex items-center px-3 py-1 bg-blue-600 text-white rounded-md text-sm font-medium hover:bg-blue-700"
-                  >
-                    <Save className="h-4 w-4 mr-1" />
-                    Save Note
-                  </button>
-                  <button
-                    onClick={() => {
-                      setIsAddingNote(false);
-                      setNewNote('');
-                    }}
-                    className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
         </div>
+
+        {/* Truck Driver Assignment Modal */}
+        {showDriverAssignment && (
+          <TruckDriverAssignment
+            order={order}
+            onAssignDriver={handleAssignDriver}
+            onClose={() => setShowDriverAssignment(false)}
+          />
+        )}
       </div>
     </div>
   );
