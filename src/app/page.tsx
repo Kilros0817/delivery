@@ -4,25 +4,51 @@ import React, { useState } from 'react';
 import { LoginScreen } from '@/components/Auth/LoginScreen';
 import { Header } from '@/components/Layout/Header';
 import { Sidebar } from '@/components/Layout/Sidebar';
-import { Dashboard } from '@/components/Dashboard/Dashboard';
-import { OrderCard } from '@/components/Orders/OrderCard';
+import { DashboardPage } from '@/components/Pages/DashboardPage';
+import { OrdersPage } from '@/components/Pages/OrdersPage';
+import { MaterialsPage } from '@/components/Pages/MaterialsPage';
+import { TruckDriversPage } from '@/components/Pages/TruckDriversPage';
 import { OrderDetails } from '@/components/Orders/OrderDetails';
 import { CreateOrderForm } from '@/components/Orders/CreateOrderForm';
 import { NotificationCenter } from '@/components/Notifications/NotificationCenter';
 import { SuccessNotification } from '@/components/Notifications/SuccessNotification';
-import { mockUsers, mockOrders, mockTruckDrivers } from '@/data/mockData';
-import { Order, OrderStatus, User } from '@/types';
+import { useOrderFilters } from '@/hooks/useOrderFilters';
+import { useNotifications, NotificationItem } from '@/hooks/useNotifications';
+import { mockUsers, mockOrders } from '@/data/mockData';
+import { Order, OrderStatus, User, MaterialItem } from '@/types';
 
-interface NotificationItem {
-  id: string;
-  type: 'status_update' | 'order_created' | 'back_ordered' | 'delivery_scheduled';
-  orderId: string;
-  orderNumber: string;
-  message: string;
-  timestamp: string;
-  read: boolean;
-  updatedBy?: User;
-}
+const initialNotifications: NotificationItem[] = [
+  {
+    id: '1',
+    type: 'status_update',
+    orderId: '1',
+    orderNumber: 'ORD-2024-001',
+    message: 'Order status updated to "In Shop" - Materials ready for pulling',
+    timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    read: false,
+    updatedBy: mockUsers[2]
+  },
+  {
+    id: '2',
+    type: 'back_ordered',
+    orderId: '2',
+    orderNumber: 'ORD-2024-002',
+    message: 'Some items are back ordered - Expected restock Jan 20',
+    timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
+    read: false,
+    updatedBy: mockUsers[2]
+  },
+  {
+    id: '3',
+    type: 'status_update',
+    orderId: '3',
+    orderNumber: 'ORD-2024-003',
+    message: 'Order delivered successfully to Brooklyn Bridge site',
+    timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
+    read: true,
+    updatedBy: mockUsers[5]
+  }
+];
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -31,43 +57,25 @@ export default function Home() {
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
-  const [notifications, setNotifications] = useState<NotificationItem[]>([
-    {
-      id: '1',
-      type: 'status_update',
-      orderId: '1',
-      orderNumber: 'ORD-2024-001',
-      message: 'Order status updated to "In Shop" - Materials ready for pulling',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      read: false,
-      updatedBy: mockUsers[2]
-    },
-    {
-      id: '2',
-      type: 'back_ordered',
-      orderId: '2',
-      orderNumber: 'ORD-2024-002',
-      message: 'Some items are back ordered - Expected restock Jan 20',
-      timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
-      read: false,
-      updatedBy: mockUsers[2]
-    },
-    {
-      id: '3',
-      type: 'status_update',
-      orderId: '3',
-      orderNumber: 'ORD-2024-003',
-      message: 'Order delivered successfully to Brooklyn Bridge site',
-      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
-      read: true,
-      updatedBy: mockUsers[5]
-    }
-  ]);
   const [showNotifications, setShowNotifications] = useState(false);
   const [successNotification, setSuccessNotification] = useState<{
     isVisible: boolean;
     message: string;
   }>({ isVisible: false, message: '' });
+
+  const { 
+    notifications, 
+    addNotification, 
+    markAsRead, 
+    markAllAsRead, 
+    unreadCount 
+  } = useNotifications(initialNotifications);
+
+  const filteredOrders = useOrderFilters(orders, currentUser, activeTab);
+
+  const showSuccessNotification = (message: string) => {
+    setSuccessNotification({ isVisible: true, message });
+  };
 
   const handleLogin = (user: User) => {
     setCurrentUser(user);
@@ -116,33 +124,19 @@ export default function Home() {
       })
     );
     
-    // Add notification for status update
-    const newNotification: NotificationItem = {
-      id: Date.now().toString(),
+    addNotification({
       type: 'status_update',
       orderId,
       orderNumber: order.orderNumber,
       message: `Order status updated to "${status.replace('_', ' ').toUpperCase()}"${notes ? ` - ${notes}` : ''}`,
-      timestamp: new Date().toISOString(),
-      read: false,
       updatedBy: currentUser
-    };
-    
-    setNotifications(prev => [newNotification, ...prev]);
-    
-    // Show success notification
-    setSuccessNotification({
-      isVisible: true,
-      message: `Order ${order.orderNumber} status updated to "${status.replace('_', ' ').toUpperCase()}"`
     });
     
-    // In a real app, this would trigger notifications to all stakeholders
-    console.log(`Order ${orderId} status updated to ${status} by ${currentUser.name}`);
+    showSuccessNotification(`Order ${order.orderNumber} status updated to "${status.replace('_', ' ').toUpperCase()}"`);
   };
 
   const handleAddNote = (orderId: string, note: string) => {
     if (!currentUser) return;
-    // In a real app, this would add the note to the order and notify stakeholders
     console.log(`Note added to order ${orderId}: ${note}`);
   };
 
@@ -175,31 +169,20 @@ export default function Home() {
       })
     );
     
-    // Add notification for driver assignment
     const order = orders.find(o => o.id === orderId);
     if (order) {
-      const newNotification: NotificationItem = {
-        id: Date.now().toString(),
+      addNotification({
         type: 'status_update',
         orderId,
         orderNumber: order.orderNumber,
         message: `Driver ${driverName} assigned to order - Status updated to "LOADED"`,
-        timestamp: new Date().toISOString(),
-        read: false,
         updatedBy: currentUser
-      };
-      
-      setNotifications(prev => [newNotification, ...prev]);
-      
-      // Show success notification
-      setSuccessNotification({
-        isVisible: true,
-        message: `Driver ${driverName} assigned to order ${order.orderNumber}`
       });
+      
+      showSuccessNotification(`Driver ${driverName} assigned to order ${order.orderNumber}`);
     }
-    
-    console.log(`Driver ${driverName} assigned to order ${orderId} by ${currentUser.name}`);
   };
+
   const handleCreateOrder = (orderData: any) => {
     if (!currentUser) return;
 
@@ -221,28 +204,15 @@ export default function Home() {
     setOrders(prevOrders => [newOrder, ...prevOrders]);
     setShowCreateOrder(false);
     
-    // Add notification for new order
-    const newNotification: NotificationItem = {
-      id: Date.now().toString(),
+    addNotification({
       type: 'order_created',
       orderId: newOrder.id,
       orderNumber: newOrder.orderNumber,
       message: `New order created for ${newOrder.projectName}`,
-      timestamp: new Date().toISOString(),
-      read: false,
       updatedBy: currentUser
-    };
-    
-    setNotifications(prev => [newNotification, ...prev]);
-    
-    // Show success notification
-    setSuccessNotification({
-      isVisible: true,
-      message: `Order ${newOrder.orderNumber} created successfully`
     });
     
-    // In a real app, this would notify all stakeholders
-    console.log(`New order created: ${newOrder.orderNumber} by ${currentUser.name}`);
+    showSuccessNotification(`Order ${newOrder.orderNumber} created successfully`);
   };
 
   const handleUpdateOrder = (updatedOrderData: any) => {
@@ -269,27 +239,20 @@ export default function Home() {
     
     setEditingOrder(null);
     
-    // Add notification for order update
-    const newNotification: NotificationItem = {
-      id: Date.now().toString(),
+    addNotification({
       type: 'status_update',
       orderId: updatedOrder.id,
       orderNumber: updatedOrder.orderNumber,
       message: `Order updated - materials modified by ${currentUser.name}`,
-      timestamp: new Date().toISOString(),
-      read: false,
       updatedBy: currentUser
-    };
-    
-    setNotifications(prev => [newNotification, ...prev]);
-    
-    // Show success notification
-    setSuccessNotification({
-      isVisible: true,
-      message: `Order ${updatedOrder.orderNumber} updated successfully`
     });
     
-    console.log(`Order updated: ${updatedOrder.orderNumber} by ${currentUser.name}`);
+    showSuccessNotification(`Order ${updatedOrder.orderNumber} updated successfully`);
+  };
+
+  const handleUpdateMaterial = (materialId: string, updates: Partial<MaterialItem>) => {
+    console.log(`Material ${materialId} updated:`, updates);
+    showSuccessNotification('Material updated successfully');
   };
 
   const handleNotificationClick = (orderId: string) => {
@@ -299,467 +262,70 @@ export default function Home() {
     }
   };
 
-  const handleMarkAsRead = (notificationId: string) => {
-    setNotifications(prev => 
-      prev.map(notification => 
-        notification.id === notificationId 
-          ? { ...notification, read: true }
-          : notification
-      )
-    );
-  };
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  const getFilteredOrders = () => {
-    if (!currentUser) return [];
-
-    switch (activeTab) {
-      case 'active-orders':
-        if (currentUser.role === 'site_foreman') {
-          return orders.filter(order => 
-            order.requestedBy.id === currentUser.id && 
-            !['delivered', 'foreman_confirmed'].includes(order.status)
-          );
-        }
-        return orders.filter(order => !['delivered', 'foreman_confirmed'].includes(order.status));
-      case 'completed-orders':
-        return orders.filter(order => ['delivered', 'foreman_confirmed'].includes(order.status));
-      case 'shop-queue':
-        return orders.filter(order => ['pending', 'in_shop', 'being_pulled', 'ready_to_load'].includes(order.status));
-      case 'truck-drivers':
-        return orders.filter(order => ['loaded', 'out_for_delivery'].includes(order.status));
-      case 'my-tasks':
-        return orders.filter(order => ['in_shop', 'being_pulled'].includes(order.status));
-      default:
-        return orders;
+  const handleViewPendingOrders = () => {
+    if (!currentUser) return;
+    
+    if (currentUser.role === 'site_foreman') {
+      setActiveTab('active-orders');
+    } else if (currentUser.role === 'shop_manager') {
+      setActiveTab('shop-queue');
+    } else if (currentUser.role === 'truck_driver') {
+      setActiveTab('my-deliveries');
     }
   };
 
-  const canCreateOrder = (userRole: string) => {
-    return ['site_foreman', 'job_lead', 'project_manager'].includes(userRole);
-  };
-
-  const renderStakeholdersContent = () => {
-    const stakeholders = [
-      { 
-        name: 'John Smith', 
-        title: 'Site Foreman', 
-        role: 'site_foreman', 
-        email: 'john.smith@company.com', 
-        phone: '(555) 123-4567',
-        permissions: [
-          'Access to Document',
-          'See Progress',
-          'Receive Notifications',
-          'Adjust/Change as Needed'
-        ],
-        restrictions: ['NO ACCESS TO ACCOUNTING']
-      },
-      { 
-        name: 'Emily Rodriguez', 
-        title: 'Job Lead', 
-        role: 'job_lead', 
-        email: 'emily.rodriguez@company.com', 
-        phone: '(555) 234-5678',
-        permissions: [
-          'Access to Document',
-          'See Progress',
-          'Receive Notifications',
-          'Adjust/Change as Needed'
-        ],
-        restrictions: ['NO ACCESS TO ACCOUNTING']
-      },
-      { 
-        name: 'Michael Chen', 
-        title: 'Project Manager', 
-        role: 'project_manager', 
-        email: 'michael.chen@company.com', 
-        phone: '(555) 345-6789',
-        permissions: [
-          'FULL ACCESS TO EVERYTHING',
-          'Change Item Style or Manufacturer',
-          'Receives All Notifications'
-        ],
-        restrictions: [],
-        special: 'Notifications sent when item style/manufacturer changed'
-      },
-      { 
-        name: 'Sarah Williams', 
-        title: 'Shop Manager', 
-        role: 'shop_manager', 
-        email: 'sarah.williams@company.com', 
-        phone: '(555) 456-7890',
-        permissions: [
-          'Limited Access to Document',
-          'Receives All Notifications'
-        ],
-        restrictions: [
-          'Cannot change Manufacturer or Item without Foreman Approval',
-          'NO ACCESS TO ACCOUNTING'
-        ]
-      },
-      { 
-        name: 'David Thompson', 
-        title: 'Assistant Shop Manager', 
-        role: 'assistant_shop_manager', 
-        email: 'david.thompson@company.com', 
-        phone: '(555) 567-8901',
-        permissions: [
-          'Limited Access to Document'
-        ],
-        restrictions: [],
-        special: 'ONLY PERSON WHO CAN HANDLE Back Ordered Items'
-      },
-      { 
-        name: 'Lisa Johnson', 
-        title: 'Shop Employee', 
-        role: 'shop_employee', 
-        email: 'lisa.johnson@company.com', 
-        phone: '(555) 678-9012',
-        permissions: [
-          'Limited Access',
-          'Note if item is "Available or Back Ordered"'
-        ],
-        restrictions: [
-          'Cannot Change or Update any line items (except availability status)'
-        ]
-      },
-      { 
-        name: 'Robert Davis', 
-        title: 'Truck Driver', 
-        role: 'truck_driver', 
-        email: 'robert.davis@company.com', 
-        phone: '(555) 789-0123',
-        permissions: [
-          'View Document Only',
-          'Acknowledge "On Truck" Line Item'
-        ],
-        restrictions: []
-      },
-      { 
-        name: 'Jennifer Martinez', 
-        title: 'Accountant Manager', 
-        role: 'accountant_manager', 
-        email: 'jennifer.martinez@company.com', 
-        phone: '(555) 890-1234',
-        permissions: [
-          'Full Access to Whole Document'
-        ],
-        restrictions: [],
-        special: 'Only person who can confirm "Billed to Job"'
-      },
-    ];
-
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Project Stakeholders</h1>
-        </div>
-        
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200 bg-gray-50">
-            <h2 className="text-lg font-semibold text-gray-900">Team Members & Contact Information</h2>
-            <p className="text-sm text-gray-600 mt-1">All stakeholders involved in the inventory workflow process</p>
-          </div>
-          
-          <div className="divide-y divide-gray-200">
-            {stakeholders.map((stakeholder, index) => (
-              <div key={index} className="px-6 py-4 hover:bg-gray-50 transition-colors">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-                      <span className="text-blue-600 font-semibold text-lg">
-                        {stakeholder.name.split(' ').map(n => n[0]).join('')}
-                      </span>
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{stakeholder.name}</h3>
-                      <p className="text-sm text-blue-600 font-medium">{stakeholder.title}</p>
-                    </div>
-                  </div>
-                  
-                  <div className="text-right">
-                    <p className="text-sm text-gray-600">{stakeholder.email}</p>
-                    <p className="text-sm text-gray-500">{stakeholder.phone}</p>
-                  </div>
-                </div>
-                
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                    {stakeholder.role.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase())}
-                  </span>
-                  
-                  {/* Role-specific permissions */}
-                  {stakeholder.role === 'site_foreman' || stakeholder.role === 'job_lead' ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      Can Create Orders
-                    </span>
-                  ) : null}
-                  
-                  {stakeholder.role === 'project_manager' ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      Can Approve Orders
-                    </span>
-                  ) : null}
-                  
-                  {stakeholder.role === 'shop_manager' || stakeholder.role === 'assistant_shop_manager' ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                      Shop Operations
-                    </span>
-                  ) : null}
-                  
-                  {stakeholder.role === 'truck_driver' ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800">
-                      Delivery Management
-                    </span>
-                  ) : null}
-                  
-                  {stakeholder.role === 'accountant_manager' ? (
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
-                      Financial Oversight
-                    </span>
-                  ) : null}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-        
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Notification System</h3>
-          <p className="text-blue-800 text-sm">
-            All stakeholders are automatically notified when orders are created, modified, back-ordered, or when special notes are added. 
-            This ensures seamless communication throughout the inventory workflow process.
-          </p>
-        </div>
-      </div>
-    );
-  };
-
-  const renderTruckDriversContent = () => {
-    const getStatusColor = (status: string) => {
-      const colors = {
-        available: 'bg-green-100 text-green-800 border-green-200',
-        loading: 'bg-blue-100 text-blue-800 border-blue-200',
-        out_for_delivery: 'bg-orange-100 text-orange-800 border-orange-200',
-        maintenance: 'bg-red-100 text-red-800 border-red-200',
-        off_duty: 'bg-gray-100 text-gray-800 border-gray-200',
-      };
-      return colors[status as keyof typeof colors] || colors.available;
-    };
-
-    const getStatusIcon = (status: string) => {
-      switch (status) {
-        case 'available':
-          return '✅';
-        case 'loading':
-          return '📦';
-        case 'out_for_delivery':
-          return '🚛';
-        case 'maintenance':
-          return '🔧';
-        case 'off_duty':
-          return '🏠';
-        default:
-          return '❓';
-      }
-    };
-
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Truck Drivers</h1>
-          <div className="text-sm text-gray-600">
-            {mockTruckDrivers.filter(d => d.status === 'available').length} Available • 
-            {mockTruckDrivers.filter(d => d.status === 'out_for_delivery').length} On Delivery • 
-            {mockTruckDrivers.filter(d => d.status === 'loading').length} Loading
-          </div>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {mockTruckDrivers.map((driver) => (
-            <div key={driver.id} className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-3">
-                  <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-semibold text-lg">
-                      {driver.name.split(' ').map(n => n[0]).join('')}
-                    </span>
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-900">{driver.name}</h3>
-                    <p className="text-sm text-gray-600">{driver.truckNumber}</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(driver.status)}`}>
-                    <span className="mr-1">{getStatusIcon(driver.status)}</span>
-                    {driver.status.replace('_', ' ').toUpperCase()}
-                  </span>
-                </div>
-              </div>
-              
-              <div className="space-y-3">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Contact:</span>
-                  <span className="font-medium">{driver.phone}</span>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">License:</span>
-                  <span className="font-medium">{driver.licenseNumber}</span>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Current Location:</span>
-                  <span className="font-medium text-right">{driver.currentLocation}</span>
-                </div>
-                
-                {driver.estimatedReturn && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">Est. Return:</span>
-                    <span className="font-medium">
-                      {new Date(driver.estimatedReturn).toLocaleTimeString([], { 
-                        hour: '2-digit', 
-                        minute: '2-digit' 
-                      })}
-                    </span>
-                  </div>
-                )}
-                
-                <div className="border-t pt-3 mt-3">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-blue-600">{driver.ordersAssigned}</div>
-                      <div className="text-gray-600">Assigned</div>
-                    </div>
-                    <div className="text-center">
-                      <div className="text-2xl font-bold text-green-600">{driver.completedToday}</div>
-                      <div className="text-gray-600">Completed Today</div>
-                    </div>
-                  </div>
-                </div>
-                
-                {driver.status === 'maintenance' && (
-                  <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-md">
-                    <p className="text-sm text-red-800">🔧 Truck in maintenance - Not available for assignments</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-        
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <h3 className="text-lg font-semibold text-blue-900 mb-2">Driver Status Legend</h3>
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-sm">
-            <div className="flex items-center space-x-2">
-              <span>✅</span>
-              <span className="text-blue-800">Available</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span>📦</span>
-              <span className="text-blue-800">Loading</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span>🚛</span>
-              <span className="text-blue-800">On Delivery</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span>🔧</span>
-              <span className="text-blue-800">Maintenance</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <span>🏠</span>
-              <span className="text-blue-800">Off Duty</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
+  const getPageTitle = (tab: string) => {
+    switch (tab) {
+      case 'active-orders': return 'Active Orders';
+      case 'completed-orders': return 'Completed Orders';
+      case 'shop-queue': return 'Shop Queue';
+      case 'my-deliveries': return 'My Deliveries';
+      case 'my-tasks': return 'My Tasks';
+      default: return 'All Orders';
+    }
   };
 
   const renderContent = () => {
     if (!currentUser) return null;
 
-    if (activeTab === 'dashboard') {
-      return (
-        <Dashboard 
-          orders={orders} 
-          currentUser={currentUser}
-          onCreateOrder={() => setShowCreateOrder(true)}
-          onViewPendingOrders={() => {
-            // Navigate to appropriate tab based on user role
-            if (currentUser.role === 'site_foreman') {
-              setActiveTab('active-orders');
-            } else if (currentUser.role === 'shop_manager') {
-              setActiveTab('shop-queue');
-            } else if (currentUser.role === 'truck_driver') {
-              setActiveTab('my-deliveries');
-            }
-          }}
-          onStatusUpdate={handleStatusUpdate}
-          onAddNote={handleAddNote}
-          onAssignDriver={handleAssignDriver}
-        />
-      );
+    switch (activeTab) {
+      case 'dashboard':
+        return (
+          <DashboardPage
+            orders={orders}
+            currentUser={currentUser}
+            onCreateOrder={() => setShowCreateOrder(true)}
+            onViewPendingOrders={handleViewPendingOrders}
+            onStatusUpdate={handleStatusUpdate}
+            onAddNote={handleAddNote}
+            onAssignDriver={handleAssignDriver}
+          />
+        );
+
+      case 'materials':
+        return <MaterialsPage onUpdateMaterial={handleUpdateMaterial} />;
+
+      case 'truck-drivers':
+        return <TruckDriversPage />;
+
+      case 'create-order':
+        setShowCreateOrder(true);
+        setActiveTab('active-orders');
+        return null;
+
+      default:
+        return (
+          <OrdersPage
+            orders={filteredOrders}
+            currentUser={currentUser}
+            title={getPageTitle(activeTab)}
+            onOrderClick={setSelectedOrder}
+            onCreateOrder={() => setShowCreateOrder(true)}
+          />
+        );
     }
-
-    if (activeTab === 'truck-drivers') {
-      return renderTruckDriversContent();
-    }
-
-    if (activeTab === 'create-order') {
-      setShowCreateOrder(true);
-      setActiveTab('active-orders');
-    }
-
-    const filteredOrders = getFilteredOrders();
-
-    return (
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">
-            {activeTab === 'active-orders' ? 'Active Orders' :
-             activeTab === 'completed-orders' ? 'Completed Orders' :
-             activeTab === 'shop-queue' ? 'Shop Queue' :
-             activeTab === 'truck-drivers' ? 'Truck Drivers' :
-             activeTab === 'my-deliveries' ? 'My Deliveries' :
-             activeTab === 'my-tasks' ? 'My Tasks' :
-             'All Orders'}
-          </h1>
-          
-          {canCreateOrder(currentUser.role) && (
-            <button
-              onClick={() => setShowCreateOrder(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Create Order
-            </button>
-          )}
-        </div>
-
-        {filteredOrders.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500 text-lg">No orders found</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-            {filteredOrders.map((order) => (
-              <OrderCard
-                key={order.id}
-                order={order}
-                onClick={setSelectedOrder}
-              />
-            ))}
-          </div>
-        )}
-      </div>
-    );
   };
 
-  // Show login screen if no user is logged in
   if (!currentUser) {
     return <LoginScreen onLogin={handleLogin} />;
   }
@@ -786,7 +352,7 @@ export default function Home() {
           onClose={() => setShowNotifications(false)}
           notifications={notifications}
           onNotificationClick={handleNotificationClick}
-          onMarkAsRead={handleMarkAsRead}
+          onMarkAsRead={markAsRead}
         />
         
         <main className="flex-1 p-6">
@@ -806,7 +372,7 @@ export default function Home() {
         />
       )}
 
-      {showCreateOrder && canCreateOrder(currentUser.role) && (
+      {showCreateOrder && (
         <CreateOrderForm
           currentUser={currentUser}
           onClose={() => setShowCreateOrder(false)}

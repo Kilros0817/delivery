@@ -2,7 +2,6 @@ import React from 'react';
 import { useState } from 'react';
 import {
   CheckCircle,
-  XCircle,
   Package,
   Truck,
   AlertTriangle,
@@ -13,8 +12,6 @@ import {
 import { Order, OrderStatus, User, UserRole } from '@/types';
 import { MaterialStatusManager } from '@/components/Orders/MaterialStatusManager';
 import { DeliveryStatusModal } from '@/components/Orders/DeliveryStatusModal';
-import { BillToJobModal } from '@/components/Orders/BillToJobModal';
-import { FutureDeliveryModal } from '@/components/Orders/FutureDeliveryModal';
 
 interface RoleBasedOrderActionsProps {
   order: Order;
@@ -32,8 +29,6 @@ export const RoleBasedOrderActions: React.FC<RoleBasedOrderActionsProps> = ({
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMaterialManager, setShowMaterialManager] = useState(false);
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
-  const [showBillToJobModal, setShowBillToJobModal] = useState(false);
-  const [showFutureDeliveryModal, setShowFutureDeliveryModal] = useState(false);
 
   const getAvailableActions = (userRole: UserRole, orderStatus: OrderStatus) => {
     const actions: Array<{
@@ -242,8 +237,6 @@ export const RoleBasedOrderActions: React.FC<RoleBasedOrderActionsProps> = ({
       setShowDeliveryModal(true);
     } else if (actionId === 'confirm_delivery_status') {
       setShowDeliveryModal(true);
-    } else if (actionId === 'bill_to_job') {
-      setShowBillToJobModal(true);
     } else {
       // Handle other custom actions
       console.log(`Action ${actionId} triggered for order ${order.id}`);
@@ -288,20 +281,7 @@ export const RoleBasedOrderActions: React.FC<RoleBasedOrderActionsProps> = ({
     setShowDeliveryModal(false);
   };
 
-  const handleBillToJob = (billingData: any) => {
-    // In a real app, this would create billing records
-    console.log('Billing confirmed:', billingData);
-    onStatusUpdate(order.id, 'delivered', `Billed to job ${billingData.jobNumber} - Cost Center: ${billingData.costCenter}`);
-    setShowBillToJobModal(false);
-  };
   const actions = getAvailableActions(currentUser.role, order.status);
-  const handleScheduleFutureDelivery = (deliveryData: any) => {
-    // In a real app, this would create a future delivery schedule
-    console.log('Future delivery scheduled:', deliveryData);
-    onStatusUpdate(order.id, 'back_ordered', `Future delivery scheduled for ${deliveryData.deliveryDate} - Awaiting Site Foreman approval`);
-    setShowFutureDeliveryModal(false);
-  };
-
 
   if (actions.length === 0) {
     return (

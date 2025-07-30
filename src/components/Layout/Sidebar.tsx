@@ -4,11 +4,6 @@ import {
   Plus, 
   Package, 
   Truck, 
-  Users, 
-  BarChart3, 
-  Clock,
-  AlertTriangle,
-  User,
   CheckCircle
 } from 'lucide-react';
 import { UserRole } from '@/types';
@@ -24,12 +19,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   activeTab, 
   onTabChange 
 }) => {
-  const stakeholders = [
-    { name: 'John Smith', title: 'Site Foreman', role: 'site_foreman' },
-    { name: 'Mike Wilson', title: 'Shop Manager', role: 'shop_manager' },
-    { name: 'Tom Rodriguez', title: 'Truck Driver', role: 'truck_driver' },
-  ];
-
   const getMenuItems = (role: UserRole) => {
     const baseItems = [
       { id: 'dashboard', label: 'Dashboard', icon: Home },
@@ -50,6 +39,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         { id: 'create-order', label: 'Create Order', icon: Plus },
       ],
       shop_manager: [
+        { id: 'materials', label: 'Materials', icon: Package },
         { id: 'truck-drivers', label: 'Truck Drivers', icon: Truck },
       ],
       truck_driver: [
