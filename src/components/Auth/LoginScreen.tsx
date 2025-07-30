@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Package, User, Lock, Eye, EyeOff } from 'lucide-react';
 import { User as UserType } from '@/types';
-import { mockUsers } from '@/data/mockData';
 
 interface LoginScreenProps {
+  users: UserType[];
   onLogin: (user: UserType) => void;
 }
 
-export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
+export const LoginScreen: React.FC<LoginScreenProps> = ({ users, onLogin }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -23,7 +23,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
     await new Promise(resolve => setTimeout(resolve, 1000));
 
     // Find user by email (in real app, this would be server-side authentication)
-    const user = mockUsers.find(u => u.email === email);
+    const user = users.find(u => u.email === email);
     
     if (user && password === 'password123') { // Demo password for all users
       onLogin(user);
@@ -124,7 +124,7 @@ export const LoginScreen: React.FC<LoginScreenProps> = ({ onLogin }) => {
           <div className="mt-6 pt-6 border-t border-gray-200">
             <p className="text-sm text-gray-600 mb-3">Demo Credentials (Password: password123):</p>
             <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto">
-              {mockUsers.filter(user => ['site_foreman', 'shop_manager', 'truck_driver'].includes(user.role)).map((user) => (
+              {users.filter(user => ['site_foreman', 'shop_manager', 'truck_driver'].includes(user.role)).map((user) => (
                 <button
                   key={user.id}
                   onClick={() => handleQuickLogin(user)}

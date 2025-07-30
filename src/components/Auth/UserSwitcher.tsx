@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { ChevronDown, User, LogOut, Users } from 'lucide-react';
 import { User as UserType } from '@/types';
-import { mockUsers } from '@/data/mockData';
 
 interface UserSwitcherProps {
   currentUser: UserType;
+  users: UserType[];
   onUserSwitch: (user: UserType) => void;
   onLogout: () => void;
 }
 
 export const UserSwitcher: React.FC<UserSwitcherProps> = ({ 
   currentUser, 
+  users,
   onUserSwitch, 
   onLogout 
 }) => {
@@ -80,7 +81,7 @@ export const UserSwitcher: React.FC<UserSwitcherProps> = ({
             </div>
             
             <div className="max-h-64 overflow-y-auto">
-              {mockUsers.map((user) => (
+              {users.map((user) => (
                 <button
                   key={user.id}
                   onClick={() => {

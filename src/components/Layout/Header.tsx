@@ -5,6 +5,7 @@ import { UserSwitcher } from '@/components/Auth/UserSwitcher';
 
 interface HeaderProps {
   currentUser: UserType;
+  users: UserType[];
   notificationCount: number;
   onNotificationClick: () => void;
   onUserSwitch: (user: UserType) => void;
@@ -13,6 +14,7 @@ interface HeaderProps {
 
 export const Header: React.FC<HeaderProps> = ({ 
   currentUser, 
+  users,
   notificationCount, 
   onNotificationClick,
   onUserSwitch,
@@ -44,6 +46,7 @@ export const Header: React.FC<HeaderProps> = ({
 
             <UserSwitcher
               currentUser={currentUser}
+              users={users}
               onUserSwitch={onUserSwitch}
               onLogout={onLogout}
             />

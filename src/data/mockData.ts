@@ -11,7 +11,7 @@ export const mockUsers: User[] = [
 
 export const mockTruckDrivers = [
   {
-    id: '6',
+    id: '6', 
     name: 'Tom Rodriguez',
     email: 'tom@company.com',
     phone: '(555) 123-4567',
@@ -24,7 +24,7 @@ export const mockTruckDrivers = [
     completedToday: 2
   },
   {
-    id: '7',
+    id: '7', 
     name: 'Carlos Martinez',
     email: 'carlos@company.com',
     phone: '(555) 234-5678',
@@ -37,7 +37,7 @@ export const mockTruckDrivers = [
     completedToday: 1
   },
   {
-    id: '8',
+    id: '8', 
     name: 'David Johnson',
     email: 'david@company.com',
     phone: '(555) 345-6789',
@@ -50,7 +50,7 @@ export const mockTruckDrivers = [
     completedToday: 3
   },
   {
-    id: '9',
+    id: '9', 
     name: 'Robert Chen',
     email: 'robert@company.com',
     phone: '(555) 456-7890',

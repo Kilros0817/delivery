@@ -14,7 +14,8 @@ import { NotificationCenter } from '@/components/Notifications/NotificationCente
 import { SuccessNotification } from '@/components/Notifications/SuccessNotification';
 import { useOrderFilters } from '@/hooks/useOrderFilters';
 import { useNotifications, NotificationItem } from '@/hooks/useNotifications';
-import { mockUsers, mockOrders } from '@/data/mockData';
+import { useUsers } from '@/hooks/useUsers';
+import { useOrders } from '@/hooks/useOrders';
 import { Order, OrderStatus, User, MaterialItem } from '@/types';
 
 const initialNotifications: NotificationItem[] = [
@@ -26,7 +27,7 @@ const initialNotifications: NotificationItem[] = [
     message: 'Order status updated to "In Shop" - Materials ready for pulling',
     timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     read: false,
-    updatedBy: mockUsers[2]
+    updatedBy: undefined // Will be set after users load
   },
   {
     id: '2',
@@ -36,7 +37,7 @@ const initialNotifications: NotificationItem[] = [
     message: 'Some items are back ordered - Expected restock Jan 20',
     timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(),
     read: false,
-    updatedBy: mockUsers[2]
+    updatedBy: undefined // Will be set after users load
   },
   {
     id: '3',
@@ -46,14 +47,28 @@ const initialNotifications: NotificationItem[] = [
     message: 'Order delivered successfully to Brooklyn Bridge site',
     timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString(),
     read: true,
-    updatedBy: mockUsers[5]
+    updatedBy: undefined // Will be set after users load
   }
 ];
 
 export default function Home() {
+  const { users, loading: usersLoading, error: usersError, getUserById } = useUsers();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+  
+  const { 
+    orders, 
+    loading: ordersLoading, 
+    error: ordersError, 
+    refreshOrders,
+    updateOrderStatus: updateOrderStatusHook,
+    createOrder: createOrderHook,
+    getOrderById 
+  } = useOrders({
+    userName: currentUser?.name,
+    refreshInterval: 30000 // Auto-refresh every 30 seconds
+  });
+  
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [orders, setOrders] = useState<Order[]>(mockOrders);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [showCreateOrder, setShowCreateOrder] = useState(false);
   const [editingOrder, setEditingOrder] = useState<Order | null>(null);
@@ -99,30 +114,11 @@ export default function Home() {
   const handleStatusUpdate = (orderId: string, status: OrderStatus, notes?: string) => {
     if (!currentUser) return;
 
-    const order = orders.find(o => o.id === orderId);
+    const order = getOrderById(orderId);
     if (!order) return;
 
-    setOrders(prevOrders => 
-      prevOrders.map(order => {
-        if (order.id === orderId) {
-          const newStatusUpdate = {
-            id: Date.now().toString(),
-            status,
-            updatedBy: currentUser,
-            timestamp: new Date().toISOString(),
-            notes
-          };
-          
-          return {
-            ...order,
-            status,
-            updatedAt: new Date().toISOString(),
-            statusHistory: [...order.statusHistory, newStatusUpdate]
-          };
-        }
-        return order;
-      })
-    );
+    // Use the hook's update method
+    updateOrderStatusHook(orderId, status, notes, currentUser);
     
     addNotification({
       type: 'status_update',
@@ -143,33 +139,13 @@ export default function Home() {
   const handleAssignDriver = (orderId: string, driverId: string, driverName: string) => {
     if (!currentUser) return;
 
-    const driverUser = mockUsers.find(u => u.id === driverId);
+    const driverUser = getUserById(driverId);
     if (!driverUser) return;
 
-    setOrders(prevOrders => 
-      prevOrders.map(order => {
-        if (order.id === orderId) {
-          const newStatusUpdate = {
-            id: Date.now().toString(),
-            status: 'loaded' as OrderStatus,
-            updatedBy: currentUser,
-            timestamp: new Date().toISOString(),
-            notes: `Assigned to driver: ${driverName}`
-          };
-          
-          return {
-            ...order,
-            assignedTo: driverUser,
-            status: 'loaded' as OrderStatus,
-            updatedAt: new Date().toISOString(),
-            statusHistory: [...order.statusHistory, newStatusUpdate]
-          };
-        }
-        return order;
-      })
-    );
+    // Update order status and assign driver
+    updateOrderStatusHook(orderId, 'loaded', `Assigned to driver: ${driverName}`, currentUser);
     
-    const order = orders.find(o => o.id === orderId);
+    const order = getOrderById(orderId);
     if (order) {
       addNotification({
         type: 'status_update',
@@ -186,68 +162,90 @@ export default function Home() {
   const handleCreateOrder = (orderData: any) => {
     if (!currentUser) return;
 
-    const newOrder: Order = {
-      id: Date.now().toString(),
-      orderNumber: `ORD-2024-${String(orders.length + 1).padStart(3, '0')}`,
+    const orderWithUser = {
       ...orderData,
-      status: 'pending' as OrderStatus,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      statusHistory: [{
-        id: Date.now().toString(),
-        status: 'pending' as OrderStatus,
-        updatedBy: currentUser,
-        timestamp: new Date().toISOString()
-      }]
+      requestedBy: currentUser
     };
 
-    setOrders(prevOrders => [newOrder, ...prevOrders]);
-    setShowCreateOrder(false);
-    
-    addNotification({
-      type: 'order_created',
-      orderId: newOrder.id,
-      orderNumber: newOrder.orderNumber,
-      message: `New order created for ${newOrder.projectName}`,
-      updatedBy: currentUser
+    createOrderHook(orderWithUser).then((newOrder) => {
+      addNotification({
+        type: 'order_created',
+        orderId: newOrder.id,
+        orderNumber: newOrder.orderNumber,
+        message: `New order created for ${newOrder.projectName}`,
+        updatedBy: currentUser
+      });
+      
+      showSuccessNotification(`Order ${newOrder.orderNumber} created successfully`);
+    }).catch((error) => {
+      console.error('Failed to create order:', error);
+      // You could show an error notification here
     });
     
-    showSuccessNotification(`Order ${newOrder.orderNumber} created successfully`);
+    setShowCreateOrder(false);
   };
+
+  // Show loading screen while users or orders are loading
+  if (usersLoading || ordersLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">
+            {usersLoading ? 'Loading users...' : 'Loading orders...'}
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error screen if users or orders failed to load
+  if (usersError || ordersError) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">
+            <svg className="h-12 w-12 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            Failed to Load {usersError ? 'Users' : 'Orders'}
+          </h2>
+          <p className="text-gray-600 mb-4">{usersError || ordersError}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   const handleUpdateOrder = (updatedOrderData: any) => {
     if (!currentUser || !editingOrder) return;
 
-    const updatedOrder: Order = {
-      ...editingOrder,
-      ...updatedOrderData,
-      updatedAt: new Date().toISOString(),
-      statusHistory: [...editingOrder.statusHistory, {
-        id: Date.now().toString(),
-        status: editingOrder.status,
-        updatedBy: currentUser,
-        timestamp: new Date().toISOString(),
-        notes: 'Order updated - materials modified'
-      }]
-    };
-
-    setOrders(prevOrders => 
-      prevOrders.map(order => 
-        order.id === editingOrder.id ? updatedOrder : order
-      )
+    // Update the order with new data
+    updateOrderStatusHook(
+      editingOrder.id, 
+      editingOrder.status, 
+      'Order updated - materials modified', 
+      currentUser
     );
     
     setEditingOrder(null);
     
     addNotification({
       type: 'status_update',
-      orderId: updatedOrder.id,
-      orderNumber: updatedOrder.orderNumber,
+      orderId: editingOrder.id,
+      orderNumber: editingOrder.orderNumber,
       message: `Order updated - materials modified by ${currentUser.name}`,
       updatedBy: currentUser
     });
     
-    showSuccessNotification(`Order ${updatedOrder.orderNumber} updated successfully`);
+    showSuccessNotification(`Order ${editingOrder.orderNumber} updated successfully`);
   };
 
   const handleUpdateMaterial = (materialId: string, updates: Partial<MaterialItem>) => {
@@ -256,7 +254,7 @@ export default function Home() {
   };
 
   const handleNotificationClick = (orderId: string) => {
-    const order = orders.find(o => o.id === orderId);
+    const order = getOrderById(orderId);
     if (order) {
       setSelectedOrder(order);
     }
@@ -327,7 +325,7 @@ export default function Home() {
   };
 
   if (!currentUser) {
-    return <LoginScreen onLogin={handleLogin} />;
+    return <LoginScreen onLogin={handleLogin} users={users} />;
   }
 
   return (
@@ -341,6 +339,7 @@ export default function Home() {
       <div className="flex-1 flex flex-col">
         <Header
           currentUser={currentUser}
+          users={users}
           notificationCount={unreadCount}
           onNotificationClick={() => setShowNotifications(!showNotifications)}
           onUserSwitch={handleUserSwitch}
