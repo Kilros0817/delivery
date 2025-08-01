@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { User } from '@/types';
 import { mockUsers } from '@/data/mockData';
+import axios from 'axios';
+import { URLs } from '@/utils/constants';
 
 interface UseUsersReturn {
   users: User[];
@@ -24,7 +26,7 @@ export const useUsers = (): UseUsersReturn => {
       //   throw new Error('Failed to fetch users');
       // }
       // return await response.json();
-      
+
       // For now, simulate API call with mock data
       await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
       return mockUsers;
